@@ -1,8 +1,8 @@
 # big-job
 
-A Claude Code skill for running long-running shell commands as detached background jobs that survive agent restarts.
+Agent skill for running long-running shell commands as detached background jobs that survive agent restarts.
 
-Start builds, test suites, training runs, or any heavy command — and keep working while it runs. If the agent dies or times out, the job keeps going. Come back later and check on it.
+Start builds, test suites, training runs, or any heavy command, in foreground or background. If the agent dies or times out, the job keeps going.
 
 ## Features
 
@@ -14,16 +14,8 @@ Start builds, test suites, training runs, or any heavy command — and keep work
 
 ## Installation
 
-Copy the `skills/big-job` directory into your Claude Code skills folder:
-
 ```bash
-cp -r skills/big-job ~/.claude/skills/big-job
-```
-
-Or symlink it:
-
-```bash
-ln -s "$(pwd)/skills/big-job" ~/.claude/skills/big-job
+npx skills install ematvey/big-job
 ```
 
 ## How It Works
