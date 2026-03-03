@@ -1,9 +1,18 @@
 #!/bin/sh
-# big-job-list.sh — List all background jobs.
+# big-job-list.sh — List background jobs (most recent first).
 #
-# Usage: big-job-list.sh
+# Usage: big-job-list.sh [-n COUNT]
+#   -n COUNT  Number of jobs to show (default: 10)
 #
 # Exit codes: 0=ok
+
+LIMIT=10
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -n) LIMIT="$2"; shift 2 ;;
+        *)  shift ;;
+    esac
+done
 
 JOBS_DIR="${BIG_JOB_DIR:-$HOME/.local/share/big-job}"
 
@@ -12,10 +21,8 @@ if [ ! -d "$JOBS_DIR" ]; then
     exit 0
 fi
 
-# Header
-printf "%-14s %-12s %-22s %s\n" "JOB_ID" "STATUS" "CREATED" "COMMAND"
-printf "%-14s %-12s %-22s %s\n" "------" "------" "-------" "-------"
-
+# Collect lines as "created_at\tformatted_line" so we can sort
+LINES=""
 found=0
 for d in "$JOBS_DIR"/*/; do
     [ -f "$d/meta.json" ] || continue
@@ -52,18 +59,28 @@ for d in "$JOBS_DIR"/*/; do
     fi
 
     # Extract created_at and command from meta.json using sed
-    CREATED=$(sed -n 's/.*"created_at"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$d/meta.json" 2>/dev/null | head -1)
-    CREATED="${CREATED:-?}"
-    CREATED=$(printf '%.19s' "$CREATED")
+    SORT_KEY=$(sed -n 's/.*"created_at"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$d/meta.json" 2>/dev/null | head -1)
+    SORT_KEY="${SORT_KEY:-0}"
+    CREATED=$(printf '%.19s' "$SORT_KEY")
     CMD=$(sed -n 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$d/meta.json" 2>/dev/null | head -1)
     CMD="${CMD:-?}"
     if [ "${#CMD}" -gt 50 ]; then
         CMD="$(printf '%.47s' "$CMD")..."
     fi
 
-    printf "%-14s %-12s %-22s %s\n" "$ID" "$STATUS" "$CREATED" "$CMD"
+    LINE=$(printf "%-14s %-12s %-22s %s" "$ID" "$STATUS" "$CREATED" "$CMD")
+    LINES="${LINES}${SORT_KEY}	${LINE}
+"
 done
 
 if [ "$found" = "0" ]; then
     echo "(no jobs found)"
+    exit 0
 fi
+
+# Header
+printf "%-14s %-12s %-22s %s\n" "JOB_ID" "STATUS" "CREATED" "COMMAND"
+printf "%-14s %-12s %-22s %s\n" "------" "------" "-------" "-------"
+
+# Sort reverse chronologically, strip sort key, limit to N
+printf '%s' "$LINES" | sort -t'	' -k1 -r | head -n "$LIMIT" | cut -f2-

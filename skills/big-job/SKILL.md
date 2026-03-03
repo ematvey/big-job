@@ -12,7 +12,7 @@ Run heavy or long-running shell commands as detached background processes that s
 All commands go through the `big-job` dispatcher in `scripts/`. Set the path once:
 
 ```bash
-BJ="<path-to-skill>/scripts/big-job"
+J="<path-to-skill>/scripts/big-job"
 ```
 
 | Command | Usage | Purpose |
@@ -21,7 +21,7 @@ BJ="<path-to-skill>/scripts/big-job"
 | `status` | `<ID>` | Check running/completed/failed. |
 | `output` | `<ID> [tail\|head] [N]` | Read output.log (default: tail 50). |
 | `kill` | `<ID> [SIGNAL]` | Send signal (default: TERM). |
-| `list` | | List all jobs with status. |
+| `list` | `[-n COUNT]` | List jobs (most recent first, default 10). |
 | `wait` | `<ID> [TIMEOUT]` | Block until done (default: 300s). |
 | `cleanup` | `[DAYS]` | Remove finished jobs older than N days (default: 7). |
 
@@ -29,17 +29,17 @@ BJ="<path-to-skill>/scripts/big-job"
 
 ```bash
 # Start and see output streaming (job survives if agent dies):
-"$BJ" start -d /home/user/project make -j8
+"$J" start -d /home/user/project make -j8
 
 # Start without following (fire-and-forget):
-"$BJ" start -n -d /home/user/project make -j8
+"$J" start -n -d /home/user/project make -j8
 
 # Check on a job later:
-"$BJ" status <ID>
-"$BJ" output <ID>
+"$J" status <ID>
+"$J" output <ID>
 
 # List all jobs:
-"$BJ" list
+"$J" list
 ```
 
 The `start` command prints `big-job:<ID>` immediately, then tails the log until the job finishes. The job is already detached — if the Bash call times out or is killed, the job keeps running. Use `-n` for fire-and-forget.
@@ -73,4 +73,4 @@ None beyond standard POSIX utilities (`sh`, `sed`, `od`, `find`, `tail`, `head`)
 - **Check exit codes** — don't assume success; read output on failure
 - **Use tail for output** — logs can be huge; don't cat the entire file
 - **Working directory** — always pass an absolute path with `-d`
-- **Reconnection** — run `"$BJ" list` to find active jobs after restart
+- **Reconnection** — run `"$J" list` to find active jobs after restart
